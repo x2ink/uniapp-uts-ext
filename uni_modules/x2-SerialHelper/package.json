@@ -1,10 +1,10 @@
 {
 	"id": "x2-SerialHelper",
-	"displayName": "x2-SerialHelper",
-	"version": "1.0.0",
-	"description": "x2-SerialHelper",
+	"displayName": "SerialHelper Android串口 选择串口 波特率 数据位 停止位",
+	"version": "1.0.1",
+	"description": "Android 串口通信插件，支持串口列表、波特率、数据位、停止位、校验位、流控设置，支持异步收发数据，适用于继电器、工控与开发板调试。",
 	"keywords": [
-        "x2-SerialHelper"
+        "Android串口，SerialPort"
     ],
 	"repository": "",
 	"engines": {
