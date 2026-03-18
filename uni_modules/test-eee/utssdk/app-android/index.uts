@@ -1,0 +1,11 @@
+import { ToastTest } from "com.x2"
+import { UTSAndroid } from "io.dcloud.uts"
+
+export const showToast = function (): void {
+  const activity = UTSAndroid.getUniActivity()
+  if (activity == null) {
+    return
+  }
+  const toastTest = new ToastTest(activity)
+  toastTest.openToast("你好")
+}

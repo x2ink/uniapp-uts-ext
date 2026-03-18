@@ -1,0 +1,52 @@
+import Serial from "com.x2.Serial"
+import SerialPortFinder from "android_serialport_api.SerialPortFinder"
+export const GetAllDevicesPath = function () : Array<string> {
+	const finder = new SerialPortFinder()
+	return Array.fromNative(finder.getAllDevicesPath())
+}
+export class SerialHelper {
+	private helper : Serial
+	private receiveCallback : UTSCallback | null = null
+	constructor(sPort : string, iBaudRate : Int) {
+		this.helper = new Serial(sPort, iBaudRate)
+		this.helper.onReceive = (text : string) => {
+			const cb = this.receiveCallback
+			if (cb != null) {
+				cb.invoke(text)
+			}
+		}
+	}
+	setDataBits(dataBits : Int) : boolean {
+		return this.helper.setDataBits(dataBits)
+	}
+	setStopBits(stopBits : Int) : boolean {
+		return this.helper.setStopBits(stopBits)
+	}
+	setParity(parity : Int) : boolean {
+		return this.helper.setParity(parity)
+	}
+	setFlowCon(flowcon : Int) : boolean {
+		return this.helper.setFlowCon(flowcon)
+	}
+	openAsync() : void {
+		this.helper.openAsync()
+	}
+	closeAsync() : void {
+		this.helper.closeAsync()
+	}
+	sendAsync(text : string) : void {
+		this.helper.sendAsync(text)
+	}
+	sendTxtAsync(text : string) : void {
+		this.helper.sendTxtAsync(text)
+	}
+	sendHexAsync(text : string) : void {
+		this.helper.sendHexAsync(text)
+	}
+	onData(callback : UTSCallback) : void {
+		this.receiveCallback = callback
+	}
+	release() : void {
+		this.helper.release()
+	}
+}
