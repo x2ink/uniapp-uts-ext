@@ -1,0 +1,25 @@
+import { AppInfoHelper, AppItem } from "com.x2"
+import Context from "android.content.Context"
+
+const FILTER_ALL = "all"
+
+function getHelper(): AppInfoHelper {
+	return new AppInfoHelper()
+}
+
+function getContext(): Context {
+	return UTSAndroid.getAppContext() as Context
+}
+
+export const GetInstalledAppList = function (filter: string | null): Array<AppItem> {
+	const realFilter = filter == null ? FILTER_ALL : filter
+	return Array.fromNative(getHelper().getInstalledAppList(getContext(), realFilter))
+}
+
+export const SearchInstalledApps = function (
+	keyword: string,
+	filter: string | null
+): Array<AppItem> {
+	const realFilter = filter == null ? FILTER_ALL : filter
+	return Array.fromNative(getHelper().searchInstalledApps(getContext(), keyword, realFilter))
+}

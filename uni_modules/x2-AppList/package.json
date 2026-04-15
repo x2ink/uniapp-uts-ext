@@ -1,0 +1,120 @@
+{
+	"id": "x2-AppList",
+	"displayName": "获取手机应用列表",
+	"version": "1.0.0",
+	"description": "可获取用户手机应用列表，应用信息（应用图标base64，应用名称，应用包名，应用安装包位置，应用大小，应用安装时间，应用更新时间）",
+	"keywords": [
+        "手机应用列表",
+        "应用信息",
+        "用户应用",
+        "系统应用",
+        "App列表"
+    ],
+	"repository": "",
+	"engines": {
+		"HBuilderX": "^3.6.8",
+		"uni-app": "^3.7.6",
+		"uni-app-x": "^3.7.6"
+	},
+	"dcloudext": {
+		"type": "uts",
+		"sale": {
+			"regular": {
+				"price": "5.00"
+			},
+			"sourcecode": {
+				"price": "50.00"
+			}
+		},
+		"contact": {
+			"qq": "97400220"
+		},
+		"declaration": {
+			"ads": "无",
+			"data": "无",
+			"permissions": "android.permission.QUERY_ALL_PACKAGES"
+		},
+		"npmurl": "",
+		"darkmode": "√",
+		"i18n": "√",
+		"widescreen": "√"
+	},
+	"uni_modules": {
+		"dependencies": [],
+		"encrypt": [],
+		"platforms": {
+			"cloud": {
+				"tcb": "x",
+				"aliyun": "x",
+				"alipay": "x"
+			},
+			"client": {
+				"uni-app": {
+					"vue": {
+						"vue2": {
+                            "extVersion": "1.0.0",
+                            "minVersion": ""
+                        },
+						"vue3": {
+                            "extVersion": "1.0.0",
+                            "minVersion": ""
+                        }
+					},
+					"web": {
+						"safari": "x",
+						"chrome": "x"
+					},
+					"app": {
+						"vue": {
+                            "extVersion": "1.0.0",
+                            "minVersion": ""
+                        },
+						"nvue": {
+                            "extVersion": "1.0.0",
+                            "minVersion": ""
+                        },
+						"android": {
+                            "extVersion": "1.0.0",
+                            "minVersion": "21"
+                        },
+						"ios": "x",
+						"harmony": "x"
+					},
+					"mp": {
+						"weixin": "x",
+						"alipay": "x",
+						"toutiao": "x",
+						"baidu": "x",
+						"kuaishou": "x",
+						"jd": "x",
+						"harmony": "x",
+						"qq": "x",
+						"lark": "x",
+						"xhs": "x"
+					},
+					"quickapp": {
+						"huawei": "x",
+						"union": "x"
+					}
+				},
+				"uni-app-x": {
+					"web": {
+						"safari": "x",
+						"chrome": "x"
+					},
+					"app": {
+						"android": {
+                            "extVersion": "1.0.0",
+                            "minVersion": "21"
+                        },
+						"ios": "x",
+						"harmony": "x"
+					},
+					"mp": {
+						"weixin": "x"
+					}
+				}
+			}
+		}
+	}
+}
