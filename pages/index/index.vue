@@ -1,340 +1,302 @@
 <template>
 	<view class="page">
-		<view class="card">
-			<view class="title">x2-SerialHelper 串口通讯示例</view>
+		<view class="search-row">
+			<input
+				class="search-input"
+				v-model="keyword"
+				placeholder="搜索应用名或包名"
+				confirm-type="search"
+				@confirm="handleSearch"
+			/>
+			<button class="search-btn" @click="handleSearch">搜索</button>
+		</view>
 
-			<view class="section">
-				<view class="label">当前设备串口列表</view>
-				<button type="primary" size="mini" @click="loadPorts">刷新串口列表</button>
-				<view class="port-list">
-					<view v-for="(item, index) in ports" :key="index" class="port-item" @click="selectPort(item)">
-						{{ item }}
-					</view>
-				</view>
+		<view class="filter-row">
+			<view
+				class="filter-item"
+				:class="activeFilter == 'all' ? 'filter-item-active' : ''"
+				@click="changeFilter('all')"
+			>
+				<text
+					class="filter-text"
+					:class="activeFilter == 'all' ? 'filter-text-active' : ''"
+				>
+					全部
+				</text>
 			</view>
 
-			<view class="section">
-				<view class="label">串口路径</view>
-				<input v-model="port" class="input" placeholder="请输入串口路径，例如 /dev/ttyS8" />
+			<view
+				class="filter-item"
+				:class="activeFilter == 'user' ? 'filter-item-active' : ''"
+				@click="changeFilter('user')"
+			>
+				<text
+					class="filter-text"
+					:class="activeFilter == 'user' ? 'filter-text-active' : ''"
+				>
+					用户
+				</text>
 			</view>
 
-			<view class="section row">
-				<view class="field">
-					<view class="label">波特率</view>
-					<input v-model="baudRate" class="input" type="number" placeholder="9600" />
-				</view>
-				<view class="field">
-					<view class="label">数据位</view>
-					<input v-model="dataBits" class="input" type="number" placeholder="8" />
-				</view>
-			</view>
-
-			<view class="section row">
-				<view class="field">
-					<view class="label">停止位</view>
-					<input v-model="stopBits" class="input" type="number" placeholder="1" />
-				</view>
-				<view class="field">
-					<view class="label">校验位</view>
-					<input v-model="parity" class="input" type="number" placeholder="0" />
-				</view>
-			</view>
-
-			<view class="section">
-				<view class="label">流控</view>
-				<input v-model="flowCon" class="input" type="number" placeholder="0" />
-			</view>
-
-			<view class="btn-row">
-				<button type="primary" @click="initAndOpen">初始化并打开</button>
-				<button type="warn" @click="closeSerial">关闭串口</button>
-			</view>
-
-			<view class="section">
-				<view class="label">发送内容</view>
-				<input v-model="sendText" class="input" placeholder="请输入发送内容，例如 A11T" />
-			</view>
-
-			<view class="btn-row">
-				<button type="primary" @click="sendMessage">发送文本</button>
-				<button @click="sendOpenCmd">发送开灯命令</button>
-				<button @click="sendCloseCmd">发送关灯命令</button>
-			</view>
-
-			<view class="section">
-				<view class="label">串口状态</view>
-				<view class="status">{{ statusText }}</view>
-			</view>
-
-			<view class="section">
-				<view class="label">接收数据</view>
-				<scroll-view scroll-y class="log-box">
-					<view v-for="(item, index) in receiveLogs" :key="'recv-' + index" class="log-item recv">
-						{{ item }}
-					</view>
-				</scroll-view>
-			</view>
-
-			<view class="section">
-				<view class="label">运行日志</view>
-				<scroll-view scroll-y class="log-box">
-					<view v-for="(item, index) in logs" :key="'log-' + index" class="log-item">
-						{{ item }}
-					</view>
-				</scroll-view>
-			</view>
-
-			<view class="btn-row">
-				<button size="mini" @click="clearLogs">清空日志</button>
+			<view
+				class="filter-item"
+				:class="activeFilter == 'system' ? 'filter-item-active' : ''"
+				@click="changeFilter('system')"
+			>
+				<text
+					class="filter-text"
+					:class="activeFilter == 'system' ? 'filter-text-active' : ''"
+				>
+					系统
+				</text>
 			</view>
 		</view>
+
+		<view class="summary-row">
+			<text class="summary-text">当前分类：{{ getFilterLabel(activeFilter) }}</text>
+			<text class="summary-text">数量：{{ appList.length }}</text>
+		</view>
+
+		<scroll-view class="list" scroll-y="true">
+			<view
+				v-for="(item, index) in appList"
+				:key="item.packageName + '_' + index"
+				class="app-item"
+			>
+				<image
+					v-if="item.icon != null && item.icon.length > 0"
+					class="app-icon"
+					:src="item.icon"
+					mode="aspectFit"
+				/>
+				<view v-else class="app-icon placeholder"></view>
+
+				<view class="app-info">
+					<text class="app-name">{{ item.name }}</text>
+					<text class="app-desc">包名：{{ item.packageName }}</text>
+					<text class="app-desc">版本：{{ item.version }}</text>
+					<text class="app-desc">大小：{{ formatSize(item.size) }}</text>
+					<text class="app-desc">路径：{{ item.path }}</text>
+				</view>
+			</view>
+
+			<view v-if="appList.length == 0" class="empty-wrap">
+				<text class="empty-text">暂无数据</text>
+			</view>
+		</scroll-view>
 	</view>
 </template>
 
-<script setup>
-	import {
-		ref,
-		onMounted,
-		onUnmounted
-	} from "vue"
-	import {
-		GetAllDevicesPath,
-		SerialHelper
-	} from "@/uni_modules/x2-SerialHelper"
+<script setup lang="uts">
+	import { ref, onMounted } from "vue"
+	import { GetInstalledAppList, SearchInstalledApps } from "@/uni_modules/x2-AppList"
 
-	let serialHelper = null
-
-	const ports = ref([])
-	const port = ref("/dev/ttyS8")
-	const baudRate = ref("9600")
-	const dataBits = ref("8")
-	const stopBits = ref("1")
-	const parity = ref("0")
-	const flowCon = ref("0")
-	const sendText = ref("A11T")
-	const statusText = ref("未连接")
-	const receiveLogs = ref([])
-	const logs = ref([])
-
-	const addLog = (text) => {
-		const time = new Date().toLocaleTimeString()
-		logs.value.unshift(`[${time}] ${text}`)
+	type AppItem = {
+		icon: string
+		name: string
+		packageName: string
+		version: string
+		path: string
+		flags: number
+		size: number
 	}
 
-	const addReceiveLog = (text) => {
-		const time = new Date().toLocaleTimeString()
-		receiveLogs.value.unshift(`[${time}] ${text}`)
-	}
+	const keyword = ref("")
+	const activeFilter = ref("all")
+	const appList = ref<AppItem[]>([])
 
-	const clearLogs = () => {
-		logs.value = []
-		receiveLogs.value = []
-	}
+	// 如果你要默认系统，把这里改成 "system"
+	// const activeFilter = ref("system")
 
-	const loadPorts = () => {
+	const loadList = (): void => {
 		try {
-			const list = GetAllDevicesPath()
-			ports.value = list || []
-			addLog(`获取串口列表成功：${JSON.stringify(ports.value)}`)
-		} catch (e) {
-			addLog(`获取串口列表失败：${e}`)
-		}
-	}
-
-	const selectPort = (item) => {
-		port.value = item
-		addLog(`已选择串口：${item}`)
-	}
-
-	const destroySerial = () => {
-		if (serialHelper) {
-			try {
-				serialHelper.closeAsync()
-			} catch (e) {
-				addLog(`关闭串口异常：${e}`)
+			const key = keyword.value.trim()
+			if (key.length > 0) {
+				appList.value = SearchInstalledApps(key, activeFilter.value)
+			} else {
+				appList.value = GetInstalledAppList(activeFilter.value)
 			}
-			try {
-				serialHelper.release()
-			} catch (e) {
-				addLog(`释放串口异常：${e}`)
-			}
-			serialHelper = null
-		}
-		statusText.value = "未连接"
-	}
-
-	const initAndOpen = () => {
-		try {
-			if (!port.value) {
-				addLog("串口路径不能为空")
-				return
-			}
-
-			destroySerial()
-
-			serialHelper = new SerialHelper(port.value, parseInt(baudRate.value))
-
-			serialHelper.onData((text) => {
-				console.log("收到串口数据:", text)
-				addReceiveLog(text)
-			})
-
-			serialHelper.setDataBits(parseInt(dataBits.value))
-			serialHelper.setStopBits(parseInt(stopBits.value))
-			serialHelper.setParity(parseInt(parity.value))
-			serialHelper.setFlowCon(parseInt(flowCon.value))
-
-			serialHelper.openAsync()
-			statusText.value = "串口已打开"
-			addLog(
-				`打开串口：port=${port.value}, baudRate=${baudRate.value}, dataBits=${dataBits.value}, stopBits=${stopBits.value}, parity=${parity.value}, flowCon=${flowCon.value}`
-			)
+			console.log("appList:", appList.value)
 		} catch (e) {
-			statusText.value = "打开失败"
-			addLog(`初始化或打开串口失败：${e}`)
+			console.log("loadList error:", e)
+			appList.value = []
 		}
 	}
 
-	const closeSerial = () => {
-		try {
-			destroySerial()
-			addLog("串口已关闭")
-		} catch (e) {
-			addLog(`关闭串口失败：${e}`)
+	const handleSearch = (): void => {
+		loadList()
+	}
+
+	const changeFilter = (filter: string): void => {
+		if (activeFilter.value == filter) {
+			return
 		}
+		activeFilter.value = filter
+		loadList()
 	}
 
-	const sendMessage = () => {
-		try {
-			if (!serialHelper) {
-				addLog("请先初始化并打开串口")
-				return
-			}
-			serialHelper.sendAsync(sendText.value)
-			addLog(`发送数据：${sendText.value}`)
-		} catch (e) {
-			addLog(`发送失败：${e}`)
+	const getFilterLabel = (filter: string): string => {
+		if (filter == "user") {
+			return "用户"
 		}
+		if (filter == "system") {
+			return "系统"
+		}
+		return "全部"
 	}
 
-	const sendOpenCmd = () => {
-		sendText.value = "A11T"
-		sendMessage()
-	}
-
-	const sendCloseCmd = () => {
-		sendText.value = "A10T"
-		sendMessage()
+	const formatSize = (size: number): string => {
+		if (size < 1024) {
+			return size + " B"
+		}
+		if (size < 1024 * 1024) {
+			return (size / 1024).toFixed(2) + " KB"
+		}
+		if (size < 1024 * 1024 * 1024) {
+			return (size / 1024 / 1024).toFixed(2) + " MB"
+		}
+		return (size / 1024 / 1024 / 1024).toFixed(2) + " GB"
 	}
 
 	onMounted(() => {
-		loadPorts()
-	})
-
-	onUnmounted(() => {
-		destroySerial()
+		loadList()
 	})
 </script>
 
 <style>
 	.page {
-		padding: 24rpx;
-		background: #f6f7fb;
-		min-height: 100vh;
+		height: 100%;
+		padding: 12px;
 		box-sizing: border-box;
+		background-color: #f7f8fa;
 	}
 
-	.card {
-		background: #ffffff;
-		border-radius: 20rpx;
-		padding: 24rpx;
-		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
-	}
-
-	.title {
-		font-size: 36rpx;
-		font-weight: bold;
-		margin-bottom: 24rpx;
-		color: #222;
-	}
-
-	.section {
-		margin-bottom: 24rpx;
-	}
-
-	.label {
-		font-size: 28rpx;
-		color: #444;
-		margin-bottom: 12rpx;
-	}
-
-	.row {
+	.search-row {
 		display: flex;
-		gap: 20rpx;
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 12px;
 	}
 
-	.field {
+	.search-input {
 		flex: 1;
-	}
-
-	.input {
-		height: 76rpx;
-		border: 1px solid #dcdfe6;
-		border-radius: 12rpx;
-		padding: 0 20rpx;
-		background: #fff;
-		font-size: 28rpx;
+		height: 38px;
+		background-color: #ffffff;
+		border-radius: 8px;
+		border: 1px solid #dddddd;
+		padding-left: 12px;
+		padding-right: 12px;
 		box-sizing: border-box;
 	}
 
-	.btn-row {
+	.search-btn {
+		margin-left: 10px;
+		height: 38px;
+		line-height: 38px;
+		padding-left: 14px;
+		padding-right: 14px;
+		font-size: 14px;
+	}
+
+	.filter-row {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 16rpx;
-		margin-bottom: 24rpx;
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 12px;
 	}
 
-	.port-list {
-		background: #fafafa;
-		border-radius: 12rpx;
-		padding: 12rpx;
-		max-height: 240rpx;
-		overflow: hidden;
+	.filter-item {
+		padding-top: 8px;
+		padding-bottom: 8px;
+		padding-left: 14px;
+		padding-right: 14px;
+		background-color: #ffffff;
+		border-radius: 18px;
+		margin-right: 10px;
+		border: 1px solid #dddddd;
 	}
 
-	.port-item {
-		padding: 14rpx 12rpx;
-		font-size: 26rpx;
-		border-bottom: 1px solid #eee;
-		color: #333;
+	.filter-item-active {
+		border-color: #007aff;
+		background-color: #eaf3ff;
 	}
 
-	.port-item:last-child {
-		border-bottom: none;
+	.filter-text {
+		font-size: 14px;
+		color: #333333;
 	}
 
-	.status {
-		font-size: 28rpx;
+	.filter-text-active {
 		color: #007aff;
+		font-weight: bold;
 	}
 
-	.log-box {
-		height: 260rpx;
-		background: #111827;
-		border-radius: 12rpx;
-		padding: 16rpx;
-		box-sizing: border-box;
+	.summary-row {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		margin-bottom: 12px;
 	}
 
-	.log-item {
-		font-size: 24rpx;
-		color: #d1d5db;
-		line-height: 1.6;
-		margin-bottom: 8rpx;
+	.summary-text {
+		font-size: 13px;
+		color: #666666;
+	}
+
+	.list {
+		height: calc(100% - 100px);
+	}
+
+	.app-item {
+		display: flex;
+		flex-direction: row;
+		padding: 12px;
+		margin-bottom: 10px;
+		border-radius: 10px;
+		background-color: #ffffff;
+	}
+
+	.app-icon {
+		width: 48px;
+		height: 48px;
+		border-radius: 10px;
+		background-color: #f0f0f0;
+	}
+
+	.placeholder {
+		background-color: #e5e5e5;
+	}
+
+	.app-info {
+		flex: 1;
+		margin-left: 12px;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.app-name {
+		font-size: 15px;
+		font-weight: bold;
+		color: #111111;
+		margin-bottom: 4px;
+	}
+
+	.app-desc {
+		font-size: 12px;
+		color: #666666;
+		margin-bottom: 2px;
 		word-break: break-all;
 	}
 
-	.recv {
-		color: #34d399;
+	.empty-wrap {
+		padding-top: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.empty-text {
+		font-size: 14px;
+		color: #999999;
 	}
 </style>
